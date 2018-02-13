@@ -2,6 +2,7 @@ package io.curity.identityserver.plugin.config;
 
 
 import se.curity.identityserver.sdk.config.Configuration;
+import se.curity.identityserver.sdk.config.annotation.DefaultEnum;
 import se.curity.identityserver.sdk.config.annotation.Description;
 import se.curity.identityserver.sdk.service.ExceptionFactory;
 import se.curity.identityserver.sdk.service.HttpClient;
@@ -13,16 +14,25 @@ import se.curity.identityserver.sdk.service.authentication.AuthenticatorInformat
 import java.util.Optional;
 
 @SuppressWarnings("InterfaceNeverImplemented")
-public interface MobileConnectAuthenticatorPluginConfig extends Configuration {
+public interface MobileConnectAuthenticatorPluginConfig extends Configuration
+{
 
-	@Description("Client id")
+    @Description("Client id")
     String getClientId();
 
     @Description("Secret key")
     String getClientSecret();
 
-    @Description("The HTTP client with any proxy and TLS settings that will be used to connect to LinkedIn")
+    @Description("The HTTP client with any proxy and TLS settings")
     Optional<HttpClient> getHttpClient();
+
+    @DefaultEnum("SANDBOX")
+    Environment getEnvironment();
+
+    enum Environment
+    {
+        SANDBOX, PRE_PRODUCTION, PRODUCTION
+    }
 
     SessionManager getSessionManager();
 

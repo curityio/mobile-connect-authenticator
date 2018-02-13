@@ -16,7 +16,7 @@ public final class MobileConnectAuthenticatorPluginDescriptor implements Authent
 
     @Override
     public String getPluginImplementationType() {
-        return "identityserver.plugins.authenticators.mobile-connect";
+        return "mobile-connect";
     }
 
     @Override
