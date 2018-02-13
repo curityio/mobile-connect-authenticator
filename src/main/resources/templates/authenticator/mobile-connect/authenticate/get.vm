@@ -15,14 +15,6 @@
 *#
 
 #define ($_body)
-<h2>Get started</h2>
-<div align="center">
-    <p>
-        First we need to direct you to your operator.<br />
-        Just enter your mobile number to continue.
-        Your number won't be shared with anyone else.
-    </p>
-</div>
 <form method="post" action="$_authUrl">
 
     #if ($_errors)
@@ -30,7 +22,16 @@
     #end
 
     <div class="sm-col-12 center">
-        <a href="" class="button button-light-grey button-fullwidth">Choose operator instead</a>
+        <h2>Get started</h2>
+        <p>
+            First we need to direct you to your operator.<br />
+            Just enter your mobile number to continue.
+            Your number won't be shared with anyone else.
+        </p>
+    </div>
+
+    <div class="sm-col-12 center">
+        <h3><a href="">Choose operator instead</a></h3>
     </div>
 
     <label for="mobileNumber" class="$!_errorClass">Mobile number (including country code)</label>

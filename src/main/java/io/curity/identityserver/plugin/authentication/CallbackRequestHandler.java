@@ -160,7 +160,7 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
         return data;
     }
 
-    private static HttpRequest.BodyProcessor getFormEncodedBodyFrom(Map<String, String> data)
+    public static HttpRequest.BodyProcessor getFormEncodedBodyFrom(Map<String, String> data)
     {
         StringBuilder stringBuilder = new StringBuilder();
 
