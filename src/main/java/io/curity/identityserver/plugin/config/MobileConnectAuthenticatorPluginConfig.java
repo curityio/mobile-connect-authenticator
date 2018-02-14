@@ -36,6 +36,7 @@ public interface MobileConnectAuthenticatorPluginConfig extends Configuration
         SANDBOX, PRE_PRODUCTION, PRODUCTION
     }
 
+    //TODO: this needs to be fixed in order to make it a multi select dropdown
     List<ACR_VALUES> getAuthenticationLevelOfAssurance();
 
     enum ACR_VALUES
