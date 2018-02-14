@@ -101,26 +101,25 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
 
             validateNonce(claimsMap.get("nonce").toString());
 
-            List<Attribute> subjectAttributers = new ArrayList<>();
-            List<Attribute> contextAttributers = new ArrayList<>();
-            subjectAttributers.add(Attribute.of("sub", Objects.toString(tokenResponseData.get("sub"))));
-            contextAttributers.add(Attribute.of("access_token", tokenResponseData.get("access_token").toString()));
-            if (tokenResponseData.get("refresh_token") != null)
-            {
-                contextAttributers.add(Attribute.of("refresh_token", tokenResponseData.get("refresh_token").toString()));
-            }
-
-
-            AuthenticationAttributes attributes = AuthenticationAttributes.of(
-                    SubjectAttributes.of(claimsMap.get("sub").toString(), Attributes.of(subjectAttributers)),
-                    ContextAttributes.of(Attributes.of(contextAttributers)));
-            AuthenticationResult authenticationResult = new AuthenticationResult(attributes);
-            return Optional.ofNullable(authenticationResult);
-
         } catch (InvalidJwtException e)
         {
             throw new IllegalStateException("Error while parsing id_token");
         }
+
+        List<Attribute> contextAttributers = new ArrayList<>();
+        contextAttributers.add(Attribute.of("access_token", tokenResponseData.get("access_token").toString()));
+        if (tokenResponseData.get("refresh_token") != null)
+        {
+            contextAttributers.add(Attribute.of("refresh_token", tokenResponseData.get("refresh_token").toString()));
+        }
+
+        Map<String, Object> userInfo = getUserInfo(tokenResponseData.get("access_token").toString());
+
+        AuthenticationAttributes attributes = AuthenticationAttributes.of(
+                SubjectAttributes.of(userInfo.get("phone_number").toString().replace("+", ""), Attributes.fromMap(userInfo)),
+                ContextAttributes.of(Attributes.of(contextAttributers)));
+        AuthenticationResult authenticationResult = new AuthenticationResult(attributes);
+        return Optional.ofNullable(authenticationResult);
     }
 
     private Map<String, Object> redeemCodeForTokens(CallbackRequestModel requestModel)
@@ -143,6 +142,40 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
                 .body(getFormEncodedBodyFrom(createPostData(requestModel.getCode(), requestModel.getRequestUrl())))
                 .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes()))
                 .method("POST")
+                .response();
+        int statusCode = tokenResponse.statusCode();
+
+        if (statusCode != 200)
+        {
+            if (_logger.isInfoEnabled())
+            {
+                _logger.info("Got error response from token endpoint: error = {}, {}", statusCode,
+                        tokenResponse.body(HttpResponse.asString()));
+            }
+
+            throw _exceptionFactory.internalServerException(ErrorCode.EXTERNAL_SERVICE_ERROR);
+        }
+
+        return _json.fromJson(tokenResponse.body(HttpResponse.asString()));
+    }
+
+    private Map<String, Object> getUserInfo(String accessToken)
+    {
+        URI userInfoEndpointUri;
+        try
+        {
+            userInfoEndpointUri = new URI(_config.getSessionManager().get("userInfoEndpoint").getValue().toString());
+        } catch (URISyntaxException e)
+        {
+            throw new IllegalArgumentException("Invalid userinfo endpoint");
+        }
+
+        HttpResponse tokenResponse = getWebServiceClient(userInfoEndpointUri)
+                .withPath(userInfoEndpointUri.getPath())
+                .request()
+                .contentType("application/json")
+                .header("Authorization", "Bearer " + accessToken)
+                .method("GET")
                 .response();
         int statusCode = tokenResponse.statusCode();
 
