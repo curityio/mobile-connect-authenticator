@@ -45,11 +45,11 @@ import static se.curity.identityserver.sdk.web.ResponseModel.templateResponseMod
 public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRequestHandler<RequestModel>
 {
     private static final Logger _logger = LoggerFactory.getLogger(MobileConnectAuthenticatorRequestHandler.class);
-    private static String AUTHORIZATION_ENDPOINT = null;
-    private static String SCOPE = null;
-    private static String CLIENT_ID = null;
-    private static String CLIENT_SECRET = null;
-    private static String SUBSCRIBER_ID = null;
+    private String AUTHORIZATION_ENDPOINT = null;
+    private String SCOPE = null;
+    private String CLIENT_ID = null;
+    private String CLIENT_SECRET = null;
+    private String SUBSCRIBER_ID = null;
 
     private final MobileConnectAuthenticatorPluginConfig _config;
     private final AuthenticatorInformationProvider _authenticatorInformationProvider;
