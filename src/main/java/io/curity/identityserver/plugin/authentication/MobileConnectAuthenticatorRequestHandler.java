@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static io.curity.identityserver.plugin.authentication.CallbackRequestHandler.getFormEncodedBodyFrom;
 import static io.curity.identityserver.plugin.descriptor.MobileConnectAuthenticatorPluginDescriptor.CALLBACK;
@@ -46,6 +46,7 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
     private static String SCOPE = null;
     private static String CLIENT_ID = null;
     private static String CLIENT_SECRET = null;
+    private static String SUBSCRIBER_ID = null;
 
     private final MobileConnectAuthenticatorPluginConfig _config;
     private final AuthenticatorInformationProvider _authenticatorInformationProvider;
@@ -144,6 +145,7 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
 
         Map<String, Object> userMNOInfo = _json.fromJson(userResponseData.body(HttpResponse.asString()));
         Map<String, Object> response = (Map<String, Object>) userMNOInfo.get("response");
+        SUBSCRIBER_ID = userMNOInfo.get("subscriber_id").toString();
         CLIENT_ID = response.get("client_id").toString();
         CLIENT_SECRET = response.get("client_secret").toString();
         _sessionManager.putIntoSession("client_id", Attribute.of("client_id", CLIENT_ID));
@@ -203,8 +205,8 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
 
     private void redirectToAuthorizationEndpoint()
     {
-        String state = UUID.randomUUID().toString();
-        String nonce = UUID.randomUUID().toString();
+        String state = getRandomString();
+        String nonce = getRandomString();
         Map<String, Collection<String>> queryStringArguments = new LinkedHashMap<>(5);
 
         _config.getSessionManager().put(Attribute.of("state", state));
@@ -216,7 +218,8 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         queryStringArguments.put("state", Collections.singleton(state));
         queryStringArguments.put("response_type", Collections.singleton("code"));
         queryStringArguments.put("nonce", Collections.singleton(nonce));
-        queryStringArguments.put("acr_values", Collections.singleton("2 3"));
+        queryStringArguments.put("acr_values", Collections.singleton("2"));
+        queryStringArguments.put("login_hint", Collections.singleton("ENCR_MSISDN:" + SUBSCRIBER_ID));
 
         queryStringArguments.put("scope", Collections.singleton("openid"));
 
@@ -226,4 +229,17 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         throw _exceptionFactory.redirectException(AUTHORIZATION_ENDPOINT,
                 RedirectStatusCode.MOVED_TEMPORARILY, queryStringArguments, false);
     }
+
+    private String getRandomString()
+    {
+        byte[] buf = new byte[16];
+
+        for (int i = 0; i < buf.length; i++)
+        {
+            buf[i] = (byte) ThreadLocalRandom.current().nextInt(0x20, 0x7e);
+        }
+
+        return new String(Base64.getUrlEncoder().encode(buf));
+    }
+
 }
