@@ -20,9 +20,11 @@ import se.curity.identityserver.sdk.web.Produces;
 import se.curity.identityserver.sdk.web.Request;
 import se.curity.identityserver.sdk.web.Response;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -151,8 +153,8 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         SUBSCRIBER_ID = userMNOInfo.get("subscriber_id").toString();
         CLIENT_ID = response.get("client_id").toString();
         CLIENT_SECRET = response.get("client_secret").toString();
-        _sessionManager.putIntoSession("client_id", Attribute.of("client_id", CLIENT_ID));
-        _sessionManager.putIntoSession("client_secret", Attribute.of("client_secret", CLIENT_SECRET));
+        _sessionManager.put(Attribute.of("client_id", CLIENT_ID));
+        _sessionManager.put(Attribute.of("client_secret", CLIENT_SECRET));
 
 
         ArrayList<Map<String, Object>> authorizationData = (ArrayList<Map<String, Object>>) (((Map<String, Object>) ((Map<String, Object>) response.get("apis")).get("operatorid")).get("link"));
@@ -164,16 +166,16 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
             }
             else if (item.get("rel").toString().equals("token"))
             {
-                _sessionManager.putIntoSession("tokenEndpoint", Attribute.of("tokenEndpoint", item.get("href").toString()));
+                _sessionManager.put(Attribute.of("tokenEndpoint", item.get("href").toString()));
             }
             else if (item.get("rel").toString().equals("userinfo"))
             {
-                _sessionManager.putIntoSession("userInfoEndpoint", Attribute.of("userInfoEndpoint", item.get("href").toString()));
+                _sessionManager.put(Attribute.of("userInfoEndpoint", item.get("href").toString()));
             }
             else if (item.get("rel").toString().equals("scope"))
             {
                 SCOPE = item.get("href").toString();
-                _sessionManager.putIntoSession("scope", Attribute.of("scope", SCOPE));
+                _sessionManager.put(Attribute.of("scope", SCOPE));
             }
 
         });
@@ -214,8 +216,8 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         Set<String> acrValues = new HashSet<>();
         Set<String> scopes = new HashSet<>();
 
-        _config.getSessionManager().put(Attribute.of("state", state));
-        _config.getSessionManager().put(Attribute.of("nonce", nonce));
+        _sessionManager.put(Attribute.of("state", state));
+        _sessionManager.put(Attribute.of("nonce", nonce));
 
 
         queryStringArguments.put("client_id", Collections.singleton(CLIENT_ID));
@@ -293,7 +295,14 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
             buf[i] = (byte) ThreadLocalRandom.current().nextInt(0x20, 0x7e);
         }
 
-        return new String(Base64.getUrlEncoder().encode(buf));
+        String result = new String(Base64.getUrlEncoder().encode(buf));
+        try
+        {
+            return URLEncoder.encode(result, "UTF-8");
+        } catch (UnsupportedEncodingException e)
+        {
+            throw new IllegalArgumentException("Failed to url encode the value : " + result);
+        }
     }
 
 }

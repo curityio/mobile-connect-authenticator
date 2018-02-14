@@ -1,6 +1,8 @@
 package io.curity.identityserver.plugin.authentication;
 
 import io.curity.identityserver.plugin.config.MobileConnectAuthenticatorPluginConfig;
+import org.jose4j.jwt.consumer.InvalidJwtException;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.curity.identityserver.sdk.Nullable;
@@ -25,9 +27,12 @@ import se.curity.identityserver.sdk.web.Response;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +42,8 @@ import java.util.Optional;
 public class CallbackRequestHandler implements AuthenticatorRequestHandler<CallbackRequestModel>
 {
     private final static Logger _logger = LoggerFactory.getLogger(CallbackRequestHandler.class);
+
+    private final String TOKEN_ENDPOINT;
 
     private final ExceptionFactory _exceptionFactory;
     private final MobileConnectAuthenticatorPluginConfig _config;
@@ -51,6 +58,8 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
         _json = config.getJson();
         _webServiceClientFactory = config.getWebServiceClientFactory();
         _authenticatorInformationProvider = config.getAuthenticatorInformationProvider();
+        TOKEN_ENDPOINT = _config.getSessionManager().get("tokenEndpoint").getValue().toString();
+
     }
 
     @Override
@@ -59,7 +68,8 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
         if (request.isGetRequest())
         {
             return new CallbackRequestModel(request);
-        } else
+        }
+        else
         {
             throw _exceptionFactory.methodNotAllowed();
         }
@@ -79,25 +89,59 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
 
         Map<String, Object> tokenResponseData = redeemCodeForTokens(requestModel);
 
-        List<Attribute> subjectAttributers = new ArrayList<>();
-        subjectAttributers.add(Attribute.of("id", Objects.toString(tokenResponseData.get("id"))));
-        
+        //parse claims without need of key
+        try
+        {
+            Map claimsMap = new JwtConsumerBuilder()
+                    .setSkipAllValidators()
+                    .setDisableRequireSignature()
+                    .setSkipSignatureVerification()
+                    .build()
+                    .processToClaims(tokenResponseData.get("id_token").toString()).getClaimsMap();
 
-        AuthenticationAttributes attributes = AuthenticationAttributes.of(
-                SubjectAttributes.of(tokenResponseData.get("id").toString(), Attributes.of(subjectAttributers)),
-                ContextAttributes.of(Attributes.of(Attribute.of("access_token", tokenResponseData.get("access_token").toString()))));
-        AuthenticationResult authenticationResult = new AuthenticationResult(attributes);
-        return Optional.ofNullable(authenticationResult);
+            validateNonce(claimsMap.get("nonce").toString());
+
+            List<Attribute> subjectAttributers = new ArrayList<>();
+            List<Attribute> contextAttributers = new ArrayList<>();
+            subjectAttributers.add(Attribute.of("sub", Objects.toString(tokenResponseData.get("sub"))));
+            contextAttributers.add(Attribute.of("access_token", tokenResponseData.get("access_token").toString()));
+            if (tokenResponseData.get("refresh_token") != null)
+            {
+                contextAttributers.add(Attribute.of("refresh_token", tokenResponseData.get("refresh_token").toString()));
+            }
+
+
+            AuthenticationAttributes attributes = AuthenticationAttributes.of(
+                    SubjectAttributes.of(claimsMap.get("sub").toString(), Attributes.of(subjectAttributers)),
+                    ContextAttributes.of(Attributes.of(contextAttributers)));
+            AuthenticationResult authenticationResult = new AuthenticationResult(attributes);
+            return Optional.ofNullable(authenticationResult);
+
+        } catch (InvalidJwtException e)
+        {
+            throw new IllegalStateException("Error while parsing id_token");
+        }
     }
 
     private Map<String, Object> redeemCodeForTokens(CallbackRequestModel requestModel)
     {
-        HttpResponse tokenResponse = getWebServiceClient()
-                .withPath("/oauth/v2/accessToken")
+        URI tokenEndpointUri;
+        try
+        {
+            tokenEndpointUri = new URI(TOKEN_ENDPOINT);
+        } catch (URISyntaxException e)
+        {
+            throw new IllegalArgumentException("Invalid token endpoint");
+        }
+
+        String clientId = _config.getSessionManager().get("client_id").getValue().toString();
+        String clientSecret = _config.getSessionManager().get("client_secret").getValue().toString();
+        HttpResponse tokenResponse = getWebServiceClient(tokenEndpointUri)
+                .withPath(tokenEndpointUri.getPath())
                 .request()
                 .contentType("application/x-www-form-urlencoded")
-                .body(getFormEncodedBodyFrom(createPostData(_config.getClientId(), _config.getClientSecret(),
-                        requestModel.getCode(), requestModel.getRequestUrl())))
+                .body(getFormEncodedBodyFrom(createPostData(requestModel.getCode(), requestModel.getRequestUrl())))
+                .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes()))
                 .method("POST")
                 .response();
         int statusCode = tokenResponse.statusCode();
@@ -116,16 +160,17 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
         return _json.fromJson(tokenResponse.body(HttpResponse.asString()));
     }
 
-    private WebServiceClient getWebServiceClient()
+    private WebServiceClient getWebServiceClient(URI uri)
     {
         Optional<HttpClient> httpClient = _config.getHttpClient();
 
         if (httpClient.isPresent())
         {
-            return _webServiceClientFactory.create(httpClient.get()).withHost("host.server.com");
-        } else
+            return _webServiceClientFactory.create(httpClient.get()).withHost(uri.getHost());
+        }
+        else
         {
-            return _webServiceClientFactory.create(URI.create("https://host.server.com"));
+            return _webServiceClientFactory.create(URI.create("https://" + uri.getHost()));
         }
     }
 
@@ -147,12 +192,10 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
         }
     }
 
-    private static Map<String, String> createPostData(String clientId, String clientSecret, String code, String callbackUri)
+    private static Map<String, String> createPostData(String code, String callbackUri)
     {
         Map<String, String> data = new HashMap<>(5);
 
-        data.put("client_id", clientId);
-        data.put("client_secret", clientSecret);
         data.put("code", code);
         data.put("grant_type", "authorization_code");
         data.put("redirect_uri", callbackUri);
@@ -198,14 +241,37 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
 
     private void validateState(String state)
     {
-        @Nullable Attribute sessionAttribute = _config.getSessionManager().get("state");
+        String sessionState = _config.getSessionManager().get("state").getValue().toString();
+        try
+        {
+            sessionState = URLDecoder.decode(sessionState, "utf-8");
+        } catch (UnsupportedEncodingException e)
+        {
+        }
 
-        if (sessionAttribute != null && state.equals(sessionAttribute.getValueOfType(String.class)))
+        if (state.equals(sessionState))
         {
             _logger.debug("State matches session");
-        } else
+        }
+        else
         {
             _logger.debug("State did not match session");
+
+            throw _exceptionFactory.badRequestException(ErrorCode.INVALID_SERVER_STATE, "Bad state provided");
+        }
+    }
+
+    private void validateNonce(String nonce)
+    {
+        @Nullable Attribute sessionAttribute = _config.getSessionManager().get("nonce");
+
+        if (sessionAttribute != null && nonce.equals(sessionAttribute.getValueOfType(String.class)))
+        {
+            _logger.debug("Nonce matches session");
+        }
+        else
+        {
+            _logger.debug("Nonce did not match session");
 
             throw _exceptionFactory.badRequestException(ErrorCode.INVALID_SERVER_STATE, "Bad state provided");
         }
