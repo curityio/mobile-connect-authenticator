@@ -100,25 +100,60 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
 
             validateNonce(claimsMap.get("nonce").toString());
 
+            List<Attribute> subjectAttributers = new ArrayList<>();
+            List<Attribute> contextAttributers = new ArrayList<>();
+
+            addAttributes("refresh_token", tokenResponseData, contextAttributers);
+            addAttributes("access_token", tokenResponseData, contextAttributers);
+
+            addAttributes("sub", claimsMap, subjectAttributers);
+
+            if (_config.isOfflineAccess() || _config.isPhoneNumberAccess() || _config.isEmailAccess() || _config.isAddressAccess() || _config.isProfileAccess())
+            {
+                Map<String, Object> userInfo = getUserInfo(tokenResponseData.get("access_token").toString());
+                addAttributes("phone_number", userInfo, subjectAttributers);
+                addAttributes("email", userInfo, subjectAttributers);
+                addAttributes("given_name", userInfo, subjectAttributers);
+                addAttributes("middle_name", userInfo, subjectAttributers);
+                addAttributes("nickname", userInfo, subjectAttributers);
+                addAttributes("preferred_username", userInfo, subjectAttributers);
+                addAttributes("family_name", userInfo, subjectAttributers);
+                addAttributes("name", userInfo, subjectAttributers);
+                if (userInfo.get("email_verified") != null)
+                {
+                    subjectAttributers.add(Attribute.of("email_verified", (Boolean) userInfo.get("email_verified")));
+                }
+                if (userInfo.get("address") != null)
+                {
+                    Map<String, Object> address = (Map<String, Object>) userInfo.get("address");
+                    addAttributes("street_address", address, subjectAttributers);
+                    addAttributes("city", address, subjectAttributers);
+                    addAttributes("state", address, subjectAttributers);
+                    addAttributes("country", address, subjectAttributers);
+                    addAttributes("postal_code", address, subjectAttributers);
+                }
+
+            }
+
+            AuthenticationAttributes attributes = AuthenticationAttributes.of(
+                    SubjectAttributes.of(claimsMap.get("sub").toString(), Attributes.of(subjectAttributers)),
+                    ContextAttributes.of(Attributes.of(contextAttributers)));
+            AuthenticationResult authenticationResult = new AuthenticationResult(attributes);
+            return Optional.ofNullable(authenticationResult);
+
         } catch (InvalidJwtException e)
         {
             throw new IllegalStateException("Error while parsing id_token");
         }
 
-        List<Attribute> contextAttributers = new ArrayList<>();
-        contextAttributers.add(Attribute.of("access_token", tokenResponseData.get("access_token").toString()));
-        if (tokenResponseData.get("refresh_token") != null)
+    }
+
+    void addAttributes(String name, Map<String, ?> dataMap, List attributesList)
+    {
+        if (dataMap.get(name) != null)
         {
-            contextAttributers.add(Attribute.of("refresh_token", tokenResponseData.get("refresh_token").toString()));
+            attributesList.add(Attribute.of(name, dataMap.get(name).toString()));
         }
-
-        Map<String, Object> userInfo = getUserInfo(tokenResponseData.get("access_token").toString());
-
-        AuthenticationAttributes attributes = AuthenticationAttributes.of(
-                SubjectAttributes.of(userInfo.get("phone_number").toString().replace("+", ""), Attributes.fromMap(userInfo)),
-                ContextAttributes.of(Attributes.of(contextAttributers)));
-        AuthenticationResult authenticationResult = new AuthenticationResult(attributes);
-        return Optional.ofNullable(authenticationResult);
     }
 
     private Map<String, Object> redeemCodeForTokens(CallbackRequestModel requestModel)
