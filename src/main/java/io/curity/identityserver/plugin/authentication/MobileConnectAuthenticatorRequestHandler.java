@@ -44,6 +44,8 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
     private static final Logger _logger = LoggerFactory.getLogger(MobileConnectAuthenticatorRequestHandler.class);
     private static String AUTHORIZATION_ENDPOINT = null;
     private static String SCOPE = null;
+    private static String CLIENT_ID = null;
+    private static String CLIENT_SECRET = null;
 
     private final MobileConnectAuthenticatorPluginConfig _config;
     private final AuthenticatorInformationProvider _authenticatorInformationProvider;
@@ -141,7 +143,14 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         }
 
         Map<String, Object> userMNOInfo = _json.fromJson(userResponseData.body(HttpResponse.asString()));
-        ArrayList<Map<String, Object>> authorizationData = (ArrayList<Map<String, Object>>) (((Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) userMNOInfo.get("response")).get("apis")).get("operatorid")).get("link"));
+        Map<String, Object> response = (Map<String, Object>) userMNOInfo.get("response");
+        CLIENT_ID = response.get("client_id").toString();
+        CLIENT_SECRET = response.get("client_secret").toString();
+        _sessionManager.putIntoSession("client_id", Attribute.of("client_id", CLIENT_ID));
+        _sessionManager.putIntoSession("client_secret", Attribute.of("client_secret", CLIENT_SECRET));
+
+
+        ArrayList<Map<String, Object>> authorizationData = (ArrayList<Map<String, Object>>) (((Map<String, Object>) ((Map<String, Object>) response.get("apis")).get("operatorid")).get("link"));
         authorizationData.forEach(item ->
         {
             if (item.get("rel").toString().equals("authorization"))
@@ -202,14 +211,14 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         _config.getSessionManager().put(Attribute.of("nonce", nonce));
 
 
-        queryStringArguments.put("client_id", Collections.singleton(_config.getClientId()));
+        queryStringArguments.put("client_id", Collections.singleton(CLIENT_ID));
         queryStringArguments.put("redirect_uri", Collections.singleton(createRedirectUri()));
         queryStringArguments.put("state", Collections.singleton(state));
         queryStringArguments.put("response_type", Collections.singleton("code"));
         queryStringArguments.put("nonce", Collections.singleton(nonce));
-        queryStringArguments.put("acr_values", Collections.singleton("3 2"));
+        queryStringArguments.put("acr_values", Collections.singleton("2 3"));
 
-        queryStringArguments.put("scope", Collections.singleton(SCOPE));
+        queryStringArguments.put("scope", Collections.singleton("openid"));
 
         _logger.debug("Redirecting to {} with query string arguments {}", AUTHORIZATION_ENDPOINT,
                 queryStringArguments);
