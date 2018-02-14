@@ -28,7 +28,6 @@ import se.curity.identityserver.sdk.web.Response;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -274,15 +273,9 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
 
     private void validateState(String state)
     {
-        String sessionState = _config.getSessionManager().get("state").getValue().toString();
-        try
-        {
-            sessionState = URLDecoder.decode(sessionState, "utf-8");
-        } catch (UnsupportedEncodingException e)
-        {
-        }
+        @Nullable Attribute sessionAttribute = _config.getSessionManager().get("state");
 
-        if (state.equals(sessionState))
+        if (sessionAttribute != null && state.equals(sessionAttribute.getValueOfType(String.class)))
         {
             _logger.debug("State matches session");
         }

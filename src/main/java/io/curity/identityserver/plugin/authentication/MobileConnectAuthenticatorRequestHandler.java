@@ -20,11 +20,9 @@ import se.curity.identityserver.sdk.web.Produces;
 import se.curity.identityserver.sdk.web.Request;
 import se.curity.identityserver.sdk.web.Response;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -296,13 +294,7 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         }
 
         String result = new String(Base64.getUrlEncoder().encode(buf));
-        try
-        {
-            return URLEncoder.encode(result, "UTF-8");
-        } catch (UnsupportedEncodingException e)
-        {
-            throw new IllegalArgumentException("Failed to url encode the value : " + result);
-        }
+        return result.replace("=", "");
     }
 
 }
