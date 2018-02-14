@@ -28,12 +28,15 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.curity.identityserver.plugin.authentication.CallbackRequestHandler.getFormEncodedBodyFrom;
+import static io.curity.identityserver.plugin.config.MobileConnectAuthenticatorPluginConfig.ACR_VALUES;
 import static io.curity.identityserver.plugin.descriptor.MobileConnectAuthenticatorPluginDescriptor.CALLBACK;
 import static java.util.Collections.emptyMap;
 import static se.curity.identityserver.sdk.web.ResponseModel.templateResponseModel;
@@ -208,6 +211,8 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         String state = getRandomString();
         String nonce = getRandomString();
         Map<String, Collection<String>> queryStringArguments = new LinkedHashMap<>(5);
+        Set<String> acrValues = new HashSet<>();
+        Set<String> scopes = new HashSet<>();
 
         _config.getSessionManager().put(Attribute.of("state", state));
         _config.getSessionManager().put(Attribute.of("nonce", nonce));
@@ -218,16 +223,65 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         queryStringArguments.put("state", Collections.singleton(state));
         queryStringArguments.put("response_type", Collections.singleton("code"));
         queryStringArguments.put("nonce", Collections.singleton(nonce));
-        queryStringArguments.put("acr_values", Collections.singleton("2"));
         queryStringArguments.put("login_hint", Collections.singleton("ENCR_MSISDN:" + SUBSCRIBER_ID));
 
-        queryStringArguments.put("scope", Collections.singleton("openid"));
+        _config.getAuthenticationLevelOfAssurance().forEach(item ->
+        {
+            if (item == ACR_VALUES.LOW)
+            {
+                acrValues.add("1");
+            }
+            else if (item == ACR_VALUES.MEDIUM)
+            {
+                acrValues.add("2");
+            }
+            else if (item == ACR_VALUES.HIGH)
+            {
+                acrValues.add("3");
+            }
+            else if (item == ACR_VALUES.VERY_HIGH)
+            {
+                acrValues.add("4");
+            }
+        });
+
+        queryStringArguments.put("acr_values", Collections.singleton(String.join(" ", acrValues)));
+
+        handleScopes(scopes);
+        queryStringArguments.put("scope", Collections.singleton(String.join(" ", scopes)));
+
 
         _logger.debug("Redirecting to {} with query string arguments {}", AUTHORIZATION_ENDPOINT,
                 queryStringArguments);
 
         throw _exceptionFactory.redirectException(AUTHORIZATION_ENDPOINT,
                 RedirectStatusCode.MOVED_TEMPORARILY, queryStringArguments, false);
+    }
+
+    private void handleScopes(Set<String> scopes)
+    {
+        scopes.add("openid");
+        if (_config.isProfileAccess())
+        {
+            scopes.add("profile");
+        }
+        if (_config.isEmailAccess())
+        {
+            scopes.add("email");
+        }
+        if (_config.isAddressAccess())
+        {
+            scopes.add("address");
+        }
+        if (_config.isPhoneNumberAccess())
+        {
+            scopes.add("phone");
+        }
+        if (_config.isOfflineAccess())
+        {
+            scopes.add("offline_access");
+        }
+
     }
 
     private String getRandomString()
