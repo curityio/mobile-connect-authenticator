@@ -15,28 +15,82 @@
 *#
 
 #define ($_body)
-<form method="post" action="$_authUrl">
 
     #if ($_errors)
         #set($_errorClass = "is-error is-error-danger")
     #end
 
+    #parse("fragments/jquery")
+
+<script type="text/javascript" src="/assets/js/script.js"></script>
+<form id="mobileNumberForm" method="post" action="$_authUrl">
+
     <div class="sm-col-12 center">
         <h2>Get started</h2>
         <p>
-            First we need to direct you to your operator.<br />
+            First we need to direct you to your operator.
             Just enter your mobile number to continue.
             Your number won't be shared with anyone else.
         </p>
     </div>
 
     <div class="sm-col-12 center">
-        <h3><a href="">Choose operator instead</a></h3>
+        <h3><a href="" id="MNOForm-link">Choose operator instead</a></h3>
     </div>
 
     <label for="mobileNumber" class="$!_errorClass">Mobile number (including country code)</label>
-    <input type="text" id="mobileNumber" name="mobileNumber" class="block full-width mb1 field-light $!_errorClass" autocapitalize="none"
+    <input type="text" id="mobileNumber" name="mobileNumber" class="block full-width mb1 field-light $!_errorClass"
+           autocapitalize="none"
            value="$!mobileNumberValue">
+
+    <button type="submit" class="button button-fullwidth button-primary">Next</button>
+
+</form>
+
+<form id="MNOForm" method="post" action="$_authUrl">
+
+    <div class="sm-col-12 center">
+        <h2>Choose your operator</h2>
+        <p>
+            Select your operator below and you will
+            be directed to their Mobile Connect service.
+        </p>
+    </div>
+
+    <div class="sm-col-12 center">
+        <h3><a id="mobileNumberForm-link" href="">Enter mobile number instead</a></h3>
+    </div>
+
+    <div class="sm-col-12 left">
+        <p>
+            The following countries and operators are currently offering
+            Mobile Connect.
+        </p>
+    </div>
+
+    <div class="mt2">
+        <label for="region" class="$!_errorClass">Region</label>
+        <select id="region" name="region" class="block full-width mb1 field-light $!_errorClass"
+                value="$!region">
+            <option value="europe">Europe</option>
+            <option value="north_america">North America</option>
+        </select>
+    </div>
+    <div class="mt2">
+        <label for="country" class="$!_errorClass">Country</label>
+        <select id="country" name="country" class="block full-width mb1 field-light $!_errorClass"
+                value="$!country">
+            <option value="united_kingdom">United Kingdom</option>
+            <option value="sweden">Sweden</option>
+        </select>
+    </div>
+    <div class="mt2">
+        <label for="operator" class="$!_errorClass">Operator</label>
+        <select id="operator" name="operator" class="block full-width mb1 field-light $!_errorClass"
+                value="$!country">
+            <option value="united_kingdom">Choose your operator</option>
+        </select>
+    </div>
 
     <button type="submit" class="button button-fullwidth button-primary">Next</button>
 
