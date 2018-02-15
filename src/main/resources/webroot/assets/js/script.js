@@ -5,7 +5,6 @@ $(document).ready(function () {
     $("#mobileNumberForm-link").click(function () {
         $("#MNOForm").hide();
         $("#mobileNumberForm").show("slow");
-
     });
 
     $("#MNOForm-link").click(function () {
@@ -13,6 +12,7 @@ $(document).ready(function () {
         populateOperatorsDropdown($("#country").val(), $("#region").val());
         $("#mobileNumberForm").hide();
         $("#MNOForm").show("slow");
+        $('#mobileNumber').val("");
     });
 
     $("#region").change(function () {

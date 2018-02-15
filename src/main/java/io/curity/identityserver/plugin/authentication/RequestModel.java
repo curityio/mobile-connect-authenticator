@@ -41,19 +41,41 @@ public final class RequestModel
     static class Post
     {
         static final String MOBILE_NUMBER_PARAM = "mobileNumber";
+        static final String OPERATOR_PARAM = "operator";
 
         private final String _mobileNumber;
+        private final String _operator;
 
 
         Post(Request request)
         {
-            _mobileNumber = request.getFormParameterValueOrError(MOBILE_NUMBER_PARAM);
+            if (request.getParameterNames().contains(MOBILE_NUMBER_PARAM))
+            {
+                _mobileNumber = request.getFormParameterValueOrError(MOBILE_NUMBER_PARAM);
+                _operator = null;
+            }
+            else
+            {
+                _mobileNumber = null;
+                _operator = request.getFormParameterValueOrError(OPERATOR_PARAM);
+            }
         }
 
         String getMobileNumber()
         {
-            // the request model was already validated if this getter ever gets called, so this is safe
             return _mobileNumber;
         }
+
+        String getMCCNumber()
+        {
+            return _operator.substring(0, 3);
+        }
+
+        String getMNCNumber()
+        {
+            return _operator.substring(3, _operator.length());
+        }
+
+
     }
 }

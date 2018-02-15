@@ -109,8 +109,7 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
     @Override
     public Optional<AuthenticationResult> post(RequestModel request, Response response)
     {
-        String mobileNumber = request.getPostRequestModel().getMobileNumber();
-        if (mobileNumber != null && mobileNumber != "")
+        if (request.getPostRequestModel().getMobileNumber() != null || request.getPostRequestModel().getMCCNumber() != null)
         {
             getMNOInfo(request);
             redirectToAuthorizationEndpoint();
@@ -122,7 +121,16 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
     {
         Map<String, String> postData = new HashMap<>(2);
         postData.put("Redirect_URL", createRedirectUri());
-        postData.put("MSISDN", requestModel.getPostRequestModel().getMobileNumber());
+        if (requestModel.getPostRequestModel().getMobileNumber() != null)
+        {
+            postData.put("MSISDN", requestModel.getPostRequestModel().getMobileNumber());
+        }
+        else
+        {
+            postData.put("Selected-MCC", requestModel.getPostRequestModel().getMCCNumber());
+            postData.put("Selected-MNC", requestModel.getPostRequestModel().getMNCNumber());
+
+        }
         HttpResponse userResponseData = getWebServiceClient()
                 .withPath(discoveryPath)
                 .request()
