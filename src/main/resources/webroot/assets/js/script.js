@@ -1,13 +1,15 @@
 $(document).ready(function () {
-    $("#MNOForm").hide("slow");
+
+    $("#MNOForm").hide();
 
     $("#mobileNumberForm-link").click(function () {
-        $("#MNOForm").hide("slow");
+        $("#MNOForm").hide();
         $("#mobileNumberForm").show("slow");
+
     });
 
     $("#MNOForm-link").click(function () {
-        $("#mobileNumberForm").hide("slow");
+        $("#mobileNumberForm").hide();
         $("#MNOForm").show("slow");
     });
 });
