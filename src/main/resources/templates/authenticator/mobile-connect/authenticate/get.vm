@@ -81,15 +81,12 @@
         <label for="country" class="$!_errorClass">Country</label>
         <select id="country" name="country" class="block full-width mb1 field-light $!_errorClass"
                 value="$!country">
-            <option value="united_kingdom">United Kingdom</option>
-            <option value="sweden">Sweden</option>
         </select>
     </div>
     <div class="mt2">
         <label for="operator" class="$!_errorClass">Operator</label>
         <select id="operator" name="operator" class="block full-width mb1 field-light $!_errorClass"
-                value="$!country">
-            <option value="united_kingdom">Choose your operator</option>
+                value="$!operator">
         </select>
     </div>
 
