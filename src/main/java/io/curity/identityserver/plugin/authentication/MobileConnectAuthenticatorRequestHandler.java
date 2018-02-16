@@ -42,6 +42,7 @@ import static io.curity.identityserver.plugin.authentication.RequestModel.Mobile
 import static io.curity.identityserver.plugin.config.MobileConnectAuthenticatorPluginConfig.ACR_VALUES;
 import static io.curity.identityserver.plugin.descriptor.MobileConnectAuthenticatorPluginDescriptor.CALLBACK;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static se.curity.identityserver.sdk.web.ResponseModel.templateResponseModel;
 
 @Produces(Produces.ContentType.HTML)
@@ -127,6 +128,7 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         if (requestModel.getPostRequestModel().getMobileNumber() != null)
         {
             postData.put("MSISDN", requestModel.getPostRequestModel().getMobileNumber());
+            _config.getUserPreferenceManager().saveUsername(requestModel.getPostRequestModel().getMobileNumber());
         }
         else
         {
@@ -210,7 +212,7 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         if (request.isGetRequest())
         {
             // GET request
-            response.setResponseModel(templateResponseModel(emptyMap(), "authenticate/get"),
+            response.setResponseModel(templateResponseModel(singletonMap(MOBILE_NUMBER_PARAM, _config.getUserPreferenceManager().getUsername()), "authenticate/get"),
                     Response.ResponseModelScope.NOT_FAILURE);
         }
 
@@ -225,7 +227,6 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
     public void onRequestModelValidationFailure(Request request, Response response, Set<ErrorMessage> errors)
     {
         response.addErrorMessages(errors);
-        response.setHttpStatus(HttpStatus.BAD_REQUEST);
     }
 
     private void redirectToAuthorizationEndpoint()

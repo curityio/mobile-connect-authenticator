@@ -2,6 +2,17 @@ $(document).ready(function () {
 
     if ($("#operator").attr("class").indexOf("is-error is-error-danger") > -1) {
         openMNOForm();
+        if (getParameterValue("#regionValue")) {
+            $('#region')
+                .val(getParameterValue("#regionValue"));
+            populateCountriesDropdown($("#region").val());
+        }
+        if (getParameterValue("#countryValue")) {
+            $('#country')
+                .val(getParameterValue("#countryValue"));
+            populateOperatorsDropdown($("#country").val(), $("#region").val());
+        }
+
     } else {
         $("#MNOForm").hide();
     }
@@ -36,6 +47,10 @@ $(document).ready(function () {
     });
 
 });
+
+function getParameterValue(name){
+    return $(name).text().trim().replace("[","").replace("]","")
+}
 
 function openMNOForm() {
     populateCountriesDropdown($("#region").val());

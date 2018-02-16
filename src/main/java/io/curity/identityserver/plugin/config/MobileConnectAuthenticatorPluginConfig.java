@@ -9,6 +9,7 @@ import se.curity.identityserver.sdk.service.ExceptionFactory;
 import se.curity.identityserver.sdk.service.HttpClient;
 import se.curity.identityserver.sdk.service.Json;
 import se.curity.identityserver.sdk.service.SessionManager;
+import se.curity.identityserver.sdk.service.UserPreferenceManager;
 import se.curity.identityserver.sdk.service.WebServiceClientFactory;
 import se.curity.identityserver.sdk.service.authentication.AuthenticatorInformationProvider;
 
@@ -63,6 +64,8 @@ public interface MobileConnectAuthenticatorPluginConfig extends Configuration
     @Description("Request a scope (offline_access) that enables the app to request a refresh token for offline access")
     @DefaultBoolean(false)
     boolean isOfflineAccess();
+
+    UserPreferenceManager getUserPreferenceManager();
 
     SessionManager getSessionManager();
 

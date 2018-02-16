@@ -27,6 +27,14 @@
 
 <script type="text/javascript" src="/assets/js/script.js"></script>
 <link rel="stylesheet" href="/assets/css/styles.css">
+
+<p id="regionValue" hidden>
+    $!_templateRequest.parameters.region
+</p>
+<p id="countryValue" hidden>
+    $!_templateRequest.parameters.country
+</p>
+
 <form id="mobileNumberForm" method="post" action="$_authUrl">
 
     <div class="sm-col-12 center">
@@ -45,7 +53,7 @@
     <input type="text" id="mobileNumber" name="mobileNumber" class="block full-width mb1 field-light $!_errorClass"
            autocapitalize="none"
            required
-           value="$!mobileNumberValue">
+           value="$!mobileNumber">
 
     <button type="submit" class="button button-fullwidth button-primary">Next</button>
 
