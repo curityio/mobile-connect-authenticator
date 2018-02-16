@@ -1,18 +1,20 @@
 $(document).ready(function () {
 
-    $("#MNOForm").hide();
+    if ($("#operator").attr("class").indexOf("is-error is-error-danger") > -1) {
+        openMNOForm();
+    } else {
+        $("#MNOForm").hide();
+    }
 
     $("#mobileNumberForm-link").click(function () {
         $("#MNOForm").hide();
         $("#mobileNumberForm").show("slow");
+        hideErrorMessage();
     });
 
     $("#MNOForm-link").click(function () {
-        populateCountriesDropdown($("#region").val());
-        populateOperatorsDropdown($("#country").val(), $("#region").val());
-        $("#mobileNumberForm").hide();
-        $("#MNOForm").show("slow");
-        $('#mobileNumber').val("");
+        openMNOForm();
+        hideErrorMessage();
     });
 
     $("#region").change(function () {
@@ -23,8 +25,29 @@ $(document).ready(function () {
     $("#country").change(function () {
         populateOperatorsDropdown($("#country").val(), $("#region").val());
     });
+
+    //hide error message on value change
+    $("#operator").change(function () {
+        hideErrorMessage();
+    });
+
+    $("#mobileNumber").change(function () {
+        hideErrorMessage();
+    });
+
 });
 
+function openMNOForm() {
+    populateCountriesDropdown($("#region").val());
+    populateOperatorsDropdown($("#country").val(), $("#region").val());
+    $("#mobileNumberForm").hide();
+    $("#MNOForm").show("slow");
+    $('#mobileNumber').val("");
+}
+
+function hideErrorMessage() {
+    $("body > main > div > div.mt3.px3.lg-px4 > div").hide()
+}
 
 function populateCountriesDropdown(region) {
     var countries = regionCountries[region];

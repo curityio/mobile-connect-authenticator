@@ -1,0 +1,3 @@
+validation.error.mobileNumber.required=You have to enter your mobile number
+validation.error.operator.required=You have to provide operator info
+

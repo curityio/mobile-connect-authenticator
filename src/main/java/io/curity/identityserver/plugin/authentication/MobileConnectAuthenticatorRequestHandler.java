@@ -8,6 +8,7 @@ import se.curity.identityserver.sdk.authentication.AuthenticationResult;
 import se.curity.identityserver.sdk.authentication.AuthenticatorRequestHandler;
 import se.curity.identityserver.sdk.errors.ErrorCode;
 import se.curity.identityserver.sdk.http.HttpResponse;
+import se.curity.identityserver.sdk.http.HttpStatus;
 import se.curity.identityserver.sdk.http.RedirectStatusCode;
 import se.curity.identityserver.sdk.service.ExceptionFactory;
 import se.curity.identityserver.sdk.service.HttpClient;
@@ -19,6 +20,7 @@ import se.curity.identityserver.sdk.service.authentication.AuthenticatorInformat
 import se.curity.identityserver.sdk.web.Produces;
 import se.curity.identityserver.sdk.web.Request;
 import se.curity.identityserver.sdk.web.Response;
+import se.curity.identityserver.sdk.web.alerts.ErrorMessage;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -36,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.curity.identityserver.plugin.authentication.CallbackRequestHandler.getFormEncodedBodyFrom;
+import static io.curity.identityserver.plugin.authentication.RequestModel.MobileModel.MOBILE_NUMBER_PARAM;
 import static io.curity.identityserver.plugin.config.MobileConnectAuthenticatorPluginConfig.ACR_VALUES;
 import static io.curity.identityserver.plugin.descriptor.MobileConnectAuthenticatorPluginDescriptor.CALLBACK;
 import static java.util.Collections.emptyMap;
@@ -211,7 +214,18 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
                     Response.ResponseModelScope.NOT_FAILURE);
         }
 
+        // on request validation failure, we should use the same template as for NOT_FAILURE
+        response.setResponseModel(templateResponseModel(emptyMap(),
+                "authenticate/get"), HttpStatus.BAD_REQUEST);
+
         return new RequestModel(request);
+    }
+
+    @Override
+    public void onRequestModelValidationFailure(Request request, Response response, Set<ErrorMessage> errors)
+    {
+        response.addErrorMessages(errors);
+        response.setHttpStatus(HttpStatus.BAD_REQUEST);
     }
 
     private void redirectToAuthorizationEndpoint()

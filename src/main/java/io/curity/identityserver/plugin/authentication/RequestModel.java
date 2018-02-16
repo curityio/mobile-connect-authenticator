@@ -32,8 +32,11 @@ public final class RequestModel
     @Valid
     private final Post _postRequestModel;
 
+    private final Request _request;
+
     RequestModel(Request request)
     {
+        _request = request;
         if (request.isPostRequest())
         {
             if (request.getParameterNames().contains(MOBILE_NUMBER_PARAM))
@@ -57,6 +60,10 @@ public final class RequestModel
                 new RuntimeException("Post RequestModel does not exist"));
     }
 
+    Request getRequest(){
+        return _request;
+    }
+
     interface Post
     {
         String getMobileNumber();
@@ -69,7 +76,7 @@ public final class RequestModel
     class MobileModel implements Post
     {
 
-        static final String MOBILE_NUMBER_PARAM = "mobileNumber";
+        public static final String MOBILE_NUMBER_PARAM = "mobileNumber";
 
         @NotBlank(message = "validation.error.mobileNumber.required")
         private final String _mobileNumber;
@@ -102,7 +109,7 @@ public final class RequestModel
 
     class MNOModel implements Post
     {
-        static final String OPERATOR_PARAM = "operator";
+        public static final String OPERATOR_PARAM = "operator";
 
         @NotBlank(message = "validation.error.operator.required")
         private final String _operator;

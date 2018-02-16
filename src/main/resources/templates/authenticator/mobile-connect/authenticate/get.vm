@@ -16,8 +16,11 @@
 
 #define ($_body)
 
-    #if ($_errors)
+    #if ($_errors.toArray()[0]=='validation.error.mobileNumber.required')
         #set($_errorClass = "is-error is-error-danger")
+    #end
+    #if ($_errors.toArray()[0]=='validation.error.operator.required')
+        #set($_errorClassOperator = "is-error is-error-danger")
     #end
 
     #parse("fragments/jquery")
@@ -34,7 +37,6 @@
             Your number won't be shared with anyone else.
         </p>
     </div>
-
     <div class="sm-col-12 center">
         <h3><a id="MNOForm-link">Choose operator instead</a></h3>
     </div>
@@ -71,8 +73,8 @@
     </div>
 
     <div class="mt2">
-        <label for="region" class="$!_errorClass">Region</label>
-        <select id="region" name="region" class="block full-width mb1 field-light $!_errorClass"
+        <label for="region">Region</label>
+        <select id="region" name="region" class="block full-width mb1 field-light"
                 required
                 value="$!region">
             <option value="europe">Europe</option>
@@ -80,15 +82,15 @@
         </select>
     </div>
     <div class="mt2">
-        <label for="country" class="$!_errorClass">Country</label>
-        <select id="country" name="country" class="block full-width mb1 field-light $!_errorClass"
+        <label for="country">Country</label>
+        <select id="country" name="country" class="block full-width mb1 field-light"
                 required
                 value="$!country">
         </select>
     </div>
     <div class="mt2">
-        <label for="operator" class="$!_errorClass">Operator</label>
-        <select id="operator" name="operator" class="block full-width mb1 field-light $!_errorClass"
+        <label for="operator" class="$!_errorClassOperator">Operator</label>
+        <select id="operator" name="operator" class="block full-width mb1 field-light $!_errorClassOperator"
                 required
                 value="$!operator">
         </select>
