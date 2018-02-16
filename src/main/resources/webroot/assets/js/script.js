@@ -64,6 +64,7 @@ function populateOperatorsDropdown(country, region) {
             .val(operatorsList[0].mcc_mnc.split(" ").join("_"));
     } else {
         jQuery('<option/>', {
+            value: "",
             html: "Please choose your operator"
         }).appendTo('#operator');
     }

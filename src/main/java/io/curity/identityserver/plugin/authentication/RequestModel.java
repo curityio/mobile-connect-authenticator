@@ -16,20 +16,39 @@
 
 package io.curity.identityserver.plugin.authentication;
 
+import org.hibernate.validator.constraints.NotBlank;
 import se.curity.identityserver.sdk.Nullable;
 import se.curity.identityserver.sdk.web.Request;
 
+import javax.validation.Valid;
 import java.util.Optional;
+
+import static io.curity.identityserver.plugin.authentication.RequestModel.MobileModel.MOBILE_NUMBER_PARAM;
 
 public final class RequestModel
 {
 
     @Nullable
+    @Valid
     private final Post _postRequestModel;
 
     RequestModel(Request request)
     {
-        _postRequestModel = request.isPostRequest() ? new Post(request) : null;
+        if (request.isPostRequest())
+        {
+            if (request.getParameterNames().contains(MOBILE_NUMBER_PARAM))
+            {
+                _postRequestModel = new MobileModel(request);
+            }
+            else
+            {
+                _postRequestModel = new MNOModel(request);
+            }
+        }
+        else
+        {
+            _postRequestModel = null;
+        }
     }
 
     Post getPostRequestModel()
@@ -38,44 +57,78 @@ public final class RequestModel
                 new RuntimeException("Post RequestModel does not exist"));
     }
 
-    static class Post
+    interface Post
     {
+        String getMobileNumber();
+
+        String getMCCNumber();
+
+        String getMNCNumber();
+    }
+
+    class MobileModel implements Post
+    {
+
         static final String MOBILE_NUMBER_PARAM = "mobileNumber";
-        static final String OPERATOR_PARAM = "operator";
 
+        @NotBlank(message = "validation.error.mobileNumber.required")
         private final String _mobileNumber;
-        private final String _operator;
 
 
-        Post(Request request)
+        MobileModel(Request request)
         {
-            if (request.getParameterNames().contains(MOBILE_NUMBER_PARAM))
-            {
-                _mobileNumber = request.getFormParameterValueOrError(MOBILE_NUMBER_PARAM);
-                _operator = null;
-            }
-            else
-            {
-                _mobileNumber = null;
-                _operator = request.getFormParameterValueOrError(OPERATOR_PARAM);
-            }
+            _mobileNumber = request.getFormParameterValueOrError(MOBILE_NUMBER_PARAM);
         }
 
-        String getMobileNumber()
+        @Override
+        public String getMobileNumber()
         {
             return _mobileNumber;
         }
 
-        String getMCCNumber()
+        @Override
+        public String getMCCNumber()
+        {
+            return null;
+        }
+
+        @Override
+        public String getMNCNumber()
+        {
+            return null;
+        }
+
+    }
+
+    class MNOModel implements Post
+    {
+        static final String OPERATOR_PARAM = "operator";
+
+        @NotBlank(message = "validation.error.operator.required")
+        private final String _operator;
+
+        MNOModel(Request request)
+        {
+            _operator = request.getFormParameterValueOrError(OPERATOR_PARAM);
+        }
+
+        @Override
+        public String getMobileNumber()
+        {
+            return null;
+        }
+
+        @Override
+        public String getMCCNumber()
         {
             return _operator.substring(0, 3);
         }
 
-        String getMNCNumber()
+        @Override
+        public String getMNCNumber()
         {
             return _operator.substring(3, _operator.length());
         }
-
-
     }
+
 }

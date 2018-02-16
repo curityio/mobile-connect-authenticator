@@ -42,6 +42,7 @@
     <label for="mobileNumber" class="$!_errorClass">Mobile number (including country code)</label>
     <input type="text" id="mobileNumber" name="mobileNumber" class="block full-width mb1 field-light $!_errorClass"
            autocapitalize="none"
+           required
            value="$!mobileNumberValue">
 
     <button type="submit" class="button button-fullwidth button-primary">Next</button>
@@ -72,6 +73,7 @@
     <div class="mt2">
         <label for="region" class="$!_errorClass">Region</label>
         <select id="region" name="region" class="block full-width mb1 field-light $!_errorClass"
+                required
                 value="$!region">
             <option value="europe">Europe</option>
             <option value="north_america">North America</option>
@@ -80,12 +82,14 @@
     <div class="mt2">
         <label for="country" class="$!_errorClass">Country</label>
         <select id="country" name="country" class="block full-width mb1 field-light $!_errorClass"
+                required
                 value="$!country">
         </select>
     </div>
     <div class="mt2">
         <label for="operator" class="$!_errorClass">Operator</label>
         <select id="operator" name="operator" class="block full-width mb1 field-light $!_errorClass"
+                required
                 value="$!operator">
         </select>
     </div>
