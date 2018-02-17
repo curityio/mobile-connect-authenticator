@@ -176,7 +176,10 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
 
         Map<String, Object> userMNOInfo = _json.fromJson(userResponseData.body(HttpResponse.asString()));
         Map<String, Object> response = (Map<String, Object>) userMNOInfo.get("response");
-        SUBSCRIBER_ID = userMNOInfo.get("subscriber_id").toString();
+        if (userMNOInfo.get("subscriber_id") != null)
+        {
+            SUBSCRIBER_ID = userMNOInfo.get("subscriber_id").toString();
+        }
         CLIENT_ID = response.get("client_id").toString();
         CLIENT_SECRET = response.get("client_secret").toString();
         _sessionManager.put(Attribute.of("client_id", CLIENT_ID));
@@ -269,8 +272,10 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         queryStringArguments.put("state", Collections.singleton(state));
         queryStringArguments.put("response_type", Collections.singleton("code"));
         queryStringArguments.put("nonce", Collections.singleton(nonce));
-        queryStringArguments.put("login_hint", Collections.singleton("ENCR_MSISDN:" + SUBSCRIBER_ID));
-
+        if (SUBSCRIBER_ID != null)
+        {
+            queryStringArguments.put("login_hint", Collections.singleton("ENCR_MSISDN:" + SUBSCRIBER_ID));
+        }
         _config.getAuthenticationLevelOfAssurance().forEach(item ->
         {
             if (item == ACR_VALUES.LOW)
