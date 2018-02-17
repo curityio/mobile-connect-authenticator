@@ -19,6 +19,7 @@ package io.curity.identityserver.plugin.authentication;
 import org.hibernate.validator.constraints.NotBlank;
 import se.curity.identityserver.sdk.Nullable;
 import se.curity.identityserver.sdk.web.Request;
+import se.curity.identityserver.sdk.web.Response;
 
 import javax.validation.Valid;
 import java.util.Optional;
@@ -33,10 +34,12 @@ public final class RequestModel
     private final Post _postRequestModel;
 
     private final Request _request;
+    private final Response _response;
 
-    RequestModel(Request request)
+    RequestModel(Request request, Response response)
     {
         _request = request;
+        _response = response;
         if (request.isPostRequest())
         {
             if (request.getParameterNames().contains(MOBILE_NUMBER_PARAM))
@@ -60,8 +63,14 @@ public final class RequestModel
                 new RuntimeException("Post RequestModel does not exist"));
     }
 
-    Request getRequest(){
+    Request getRequest()
+    {
         return _request;
+    }
+
+    public Response getResponse()
+    {
+        return _response;
     }
 
     interface Post

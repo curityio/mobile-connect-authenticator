@@ -1,20 +1,19 @@
 $(document).ready(function () {
 
-    if ($("#operator").attr("class").indexOf("is-error is-error-danger") > -1) {
+    if ($("#operator").attr("class").indexOf("is-error is-error-danger") > -1 || getParameterValue("#regionValue")) {
         openMNOForm();
-        if (getParameterValue("#regionValue")) {
-            $('#region')
-                .val(getParameterValue("#regionValue"));
-            populateCountriesDropdown($("#region").val());
-        }
-        if (getParameterValue("#countryValue")) {
-            $('#country')
-                .val(getParameterValue("#countryValue"));
-            populateOperatorsDropdown($("#country").val(), $("#region").val());
-        }
-
     } else {
         $("#MNOForm").hide();
+    }
+    if (getParameterValue("#regionValue")) {
+        $('#region')
+            .val(getParameterValue("#regionValue"));
+        populateCountriesDropdown($("#region").val());
+    }
+    if (getParameterValue("#countryValue")) {
+        $('#country')
+            .val(getParameterValue("#countryValue"));
+        populateOperatorsDropdown($("#country").val(), $("#region").val());
     }
 
     $("#mobileNumberForm-link").click(function () {

@@ -3,6 +3,7 @@ package io.curity.identityserver.plugin.authentication;
 import io.curity.identityserver.plugin.config.MobileConnectAuthenticatorPluginConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.curity.identityserver.sdk.Nullable;
 import se.curity.identityserver.sdk.attribute.Attribute;
 import se.curity.identityserver.sdk.authentication.AuthenticationResult;
 import se.curity.identityserver.sdk.authentication.AuthenticatorRequestHandler;
@@ -115,13 +116,15 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
     {
         if (request.getPostRequestModel().getMobileNumber() != null || request.getPostRequestModel().getMCCNumber() != null)
         {
-            getMNOInfo(request);
-            redirectToAuthorizationEndpoint();
+            if (getMNOInfo(request))
+            {
+                redirectToAuthorizationEndpoint();
+            }
         }
         return Optional.empty();
     }
 
-    private void getMNOInfo(RequestModel requestModel)
+    private boolean getMNOInfo(RequestModel requestModel)
     {
         Map<String, String> postData = new HashMap<>(2);
         postData.put("Redirect_URL", createRedirectUri());
@@ -150,13 +153,25 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
 
         if (statusCode != 200)
         {
+            Map<String, Object> errorResponse = _json.fromJson(userResponseData.body(HttpResponse.asString()));
             if (_logger.isInfoEnabled())
             {
                 _logger.info("Got error response from token endpoint: error = {}, {}", statusCode,
-                        userResponseData.body(HttpResponse.asString()));
+                        errorResponse);
+            }
+            @Nullable
+            Object errorMessage = errorResponse.get("description");
+            if (errorMessage == null)
+            {
+                errorMessage = errorResponse.get("error");
+            }
+            if (errorMessage == null)
+            {
+                errorMessage = "Unable to find discovery data with given information";
             }
 
-            throw _exceptionFactory.internalServerException(ErrorCode.EXTERNAL_SERVICE_ERROR);
+            handleError(requestModel.getResponse(), errorMessage.toString());
+            return false;
         }
 
         Map<String, Object> userMNOInfo = _json.fromJson(userResponseData.body(HttpResponse.asString()));
@@ -190,6 +205,8 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
             }
 
         });
+
+        return true;
     }
 
     private WebServiceClient getWebServiceClient()
@@ -220,7 +237,13 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         response.setResponseModel(templateResponseModel(emptyMap(),
                 "authenticate/get"), HttpStatus.BAD_REQUEST);
 
-        return new RequestModel(request);
+        return new RequestModel(request, response);
+    }
+
+    private void handleError(Response response, String errorMessage)
+    {
+        response.setResponseModel(templateResponseModel(singletonMap("error", errorMessage), "authenticate/get"),
+                Response.ResponseModelScope.NOT_FAILURE);
     }
 
     @Override
