@@ -245,7 +245,10 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
 
     private void handleError(Response response, String errorMessage)
     {
-        response.setResponseModel(templateResponseModel(singletonMap("error", errorMessage), "authenticate/get"),
+        Map dataMap = new LinkedHashMap(2);
+        dataMap.put(MOBILE_NUMBER_PARAM, _config.getUserPreferenceManager().getUsername());
+        dataMap.put("error", errorMessage);
+        response.setResponseModel(templateResponseModel(dataMap, "authenticate/get"),
                 Response.ResponseModelScope.NOT_FAILURE);
     }
 
