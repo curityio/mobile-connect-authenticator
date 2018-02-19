@@ -25,11 +25,20 @@
 
     #parse("fragments/jquery")
 
+    #if($_templateRequest.parameters.region.toArray().size()>0)
+        #set($regionValue = $!_templateRequest.parameters.region.toArray()[0])
+    #end
+    #if($_templateRequest.parameters.country.toArray().size()>0)
+        #set($countryValue = $!_templateRequest.parameters.country.toArray()[0])
+    #end
+    #if($_templateRequest.parameters.operator.toArray().size()>0)
+        #set($operatorValue = $!_templateRequest.parameters.operator.toArray()[0])
+    #end
 
 <script type="text/javascript" $!nonceAttr>
-    var regionPostbackValue = "$!_templateRequest.parameters.region".replace("[", "").replace("]", "");
-    var countryPostbackValue = "$!_templateRequest.parameters.country".replace("[", "").replace("]", "");
-    var operatorPostbackValue = "$!_templateRequest.parameters.operator".replace("[", "").replace("]", "");
+    var regionPostbackValue = "$!regionValue"
+    var countryPostbackValue = "$!countryValue"
+    var operatorPostbackValue = "$!operatorValue"
 </script>
 
 <script type="text/javascript" src="/assets/js/script.js"></script>
