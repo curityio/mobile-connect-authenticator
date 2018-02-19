@@ -25,15 +25,15 @@
 
     #parse("fragments/jquery")
 
+
+<script type="text/javascript" $!nonceAttr>
+    var regionPostbackValue = "$!_templateRequest.parameters.region".replace("[", "").replace("]", "");
+    var countryPostbackValue = "$!_templateRequest.parameters.country".replace("[", "").replace("]", "");
+    var operatorPostbackValue = "$!_templateRequest.parameters.operator".replace("[", "").replace("]", "");
+</script>
+
 <script type="text/javascript" src="/assets/js/script.js"></script>
 <link rel="stylesheet" href="/assets/css/styles.css">
-
-<p id="regionValue" hidden>
-    $!_templateRequest.parameters.region
-</p>
-<p id="countryValue" hidden>
-    $!_templateRequest.parameters.country
-</p>
 
     #set($isHidden = "hidden")
     #if ($error)
@@ -44,6 +44,7 @@
         $!error<br>
     </div>
 </div>
+
 <form id="mobileNumberForm" method="post" action="$_authUrl">
 
     <div class="sm-col-12 center">
