@@ -38,6 +38,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static se.curity.identityserver.sdk.web.ResponseModel.templateResponseModel;
+
 public class CallbackRequestHandler implements AuthenticatorRequestHandler<CallbackRequestModel>
 {
     private final static Logger _logger = LoggerFactory.getLogger(CallbackRequestHandler.class);
@@ -64,25 +66,34 @@ public class CallbackRequestHandler implements AuthenticatorRequestHandler<Callb
     @Override
     public CallbackRequestModel preProcess(Request request, Response response)
     {
+        CallbackRequestModel requestModel = new CallbackRequestModel(request);
         if (request.isGetRequest())
         {
-            return new CallbackRequestModel(request);
+            Map<String, Object> dataMap = new HashMap<>();
+            dataMap.put("code", requestModel.getCode());
+            dataMap.put("state", requestModel.getState());
+            dataMap.put("error", requestModel.getError());
+            dataMap.put("error_description", requestModel.getErrorDescription());
+
+            response.setResponseModel(templateResponseModel(dataMap, "authenticate/callback"),
+                    Response.ResponseModelScope.NOT_FAILURE);
         }
-        else
-        {
-            throw _exceptionFactory.methodNotAllowed();
-        }
+        return requestModel;
     }
 
     @Override
     public Optional<AuthenticationResult> post(CallbackRequestModel requestModel, Response response)
     {
-        throw _exceptionFactory.methodNotAllowed();
+        return handleCallbackResponse(requestModel);
     }
 
     @Override
     public Optional<AuthenticationResult> get(CallbackRequestModel requestModel, Response response)
     {
+        return Optional.empty();
+    }
+
+    private Optional<AuthenticationResult> handleCallbackResponse(CallbackRequestModel requestModel){
         validateState(requestModel.getState());
         handleError(requestModel);
 

@@ -10,7 +10,6 @@ import se.curity.identityserver.sdk.authentication.AuthenticatorRequestHandler;
 import se.curity.identityserver.sdk.errors.ErrorCode;
 import se.curity.identityserver.sdk.http.HttpResponse;
 import se.curity.identityserver.sdk.http.HttpStatus;
-import se.curity.identityserver.sdk.http.RedirectStatusCode;
 import se.curity.identityserver.sdk.service.ExceptionFactory;
 import se.curity.identityserver.sdk.service.HttpClient;
 import se.curity.identityserver.sdk.service.Json;
@@ -118,7 +117,7 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         {
             if (getMNOInfo(request))
             {
-                redirectToAuthorizationEndpoint();
+                redirectToAuthorizationEndpoint(response);
             }
         }
         return Optional.empty();
@@ -258,7 +257,7 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         response.addErrorMessages(errors);
     }
 
-    private void redirectToAuthorizationEndpoint()
+    private void redirectToAuthorizationEndpoint(Response response)
     {
         String state = getRandomString();
         String nonce = getRandomString();
@@ -308,8 +307,20 @@ public class MobileConnectAuthenticatorRequestHandler implements AuthenticatorRe
         _logger.debug("Redirecting to {} with query string arguments {}", AUTHORIZATION_ENDPOINT,
                 queryStringArguments);
 
-        throw _exceptionFactory.redirectException(AUTHORIZATION_ENDPOINT,
-                RedirectStatusCode.MOVED_TEMPORARILY, queryStringArguments, false);
+        String authorizeUrl = buildUrl(AUTHORIZATION_ENDPOINT, queryStringArguments);
+
+        response.setResponseModel(templateResponseModel(singletonMap("authorizeUrl", authorizeUrl), "authenticate/authorize"),
+                Response.ResponseModelScope.NOT_FAILURE);
+    }
+
+    private String buildUrl(String endpoint, Map<String, Collection<String>> queryStringArguments)
+    {
+        final Set<String> query = new HashSet<>();
+        queryStringArguments.forEach((key, item) ->
+        {
+            query.add(key + "=" + String.join(" ", item));
+        });
+        return endpoint + "?" + String.join("&", query);
     }
 
     private void handleScopes(Set<String> scopes)
