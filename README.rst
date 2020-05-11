@@ -1,8 +1,11 @@
 MobileConnect Authenticator Plug-in
 ===================================
-
-.. image:: https://travis-ci.org/curityio/identityserver.plugins.authenticators.mobile-connect-authenticator.svg?branch=dev
-     :target: https://travis-ci.org/curityio/identityserver.plugins.authenticators.mobile-connect-authenticator
+   
+.. image:: https://curity.io/assets/images/badges/mobile-connect-authenticator-quality.svg
+       :target: https://curity.io/resources/code-examples/status/
+       
+.. image:: https://curity.io/assets/images/badges/mobile-connect-authenticator-availability.svg
+       :target: https://curity.io/resources/code-examples/status/
 
 This project provides an opens source MobileConnect Authenticator plug-in for the Curity Identity Server. This allows an administrator to add functionality to Curity which will then enable end users to login using their MobileConnect credentials. The app that integrates with Curity may also be configured to receive the MobileConnect access token and refresh token, allowing it to manage resources in MobileConnect.
 
