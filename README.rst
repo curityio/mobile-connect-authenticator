@@ -12,13 +12,13 @@ This project provides an opens source MobileConnect Authenticator plug-in for th
 System Requirements
 ~~~~~~~~~~~~~~~~~~~
 
-* Curity Identity Server 2.4.0 and `its system requirements <https://developer.curity.io/docs/latest/system-admin-guide/system-requirements.html>`_
+* Curity Identity Server 7.0.2 and `its system requirements <https://developer.curity.io/docs/latest/system-admin-guide/system-requirements.html>`_
 
 Requirements for Building from Source
 """""""""""""""""""""""""""""""""""""
 
 * Maven 3
-* Java JDK v. 8
+* Java SDK 17 or later
 
 Compiling the Plug-in from Source
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,17 +59,18 @@ When you view the app's configuration after creating it, you'll find the ``Clien
 
 MobileConnect will also display the ``Authorized Redirect URLs`` in the new app's configuration. One of these need to match the yet-to-be-created MobileConnect authenticator instance in Curity. The default will not work, and, if used, will result in an error. This should be updated to some URL that follows the pattern ``$baseUrl/$authenticationEndpointPath/$identityserver.plugins.authenticators.mobile-connectAuthnticatorId/callback``, where each of these URI components has the following meaning:
 
-============================== ============================================================================================
-URI Component                  Meaning
------------------------------- --------------------------------------------------------------------------------------------
-``baseUrl``                    The base URL of the server (defined on the ``System --> General`` page of the
-                               admin GUI). If this value is not set, then the server scheme, name, and port should be
-                               used (e.g., ``https://localhost:8443``).
-``authenticationEndpointPath`` The path of the authentication endpoint. In the admin GUI, this is located in the
-                               authentication profile's ``Endpoints`` tab for the endpoint that has the type
-                               ``auth-authentication``.
-``identityserver.plugins.authenticators.mobile-connectAuthenticatorId``    This is the name given to the MobileConnect authenticator when defining it (e.g., ``identityserver.plugins.authenticators.mobile-connect1``).
-============================== ============================================================================================
+======================================================================= =======================================================================================
+URI Component                                                           Meaning
+----------------------------------------------------------------------- ---------------------------------------------------------------------------------------
+``baseUrl``                                                             The base URL of the server (defined on the ``System --> General`` page of the
+                                                                        admin GUI). If this value is not set, then the server scheme, name, and port should be
+                                                                        used (e.g., ``https://localhost:8443``).
+``authenticationEndpointPath``                                          The path of the authentication endpoint. In the admin GUI, this is located in the
+                                                                        authentication profile's ``Endpoints`` tab for the endpoint that has the type
+                                                                        ``auth-authentication``.
+``identityserver.plugins.authenticators.mobile-connectAuthenticatorId`` This is the name given to the MobileConnect authenticator when defining it (e.g.,
+                                                                        ``identityserver.plugins.authenticators.mobile-connect1``).
+======================================================================= =======================================================================================
 
     .. figure:: docs/images/create-identityserver.plugins.authenticators.mobile-connect-app2.png
         :align: center
